@@ -110,11 +110,12 @@
       padding-bottom: 10px;
     }
 
-    /* 序号样式 - H3级别 */
+    /* 序号样式  */
     .speech-number {
-      font-size: 20px;
+      font-size: 30px;
       font-weight: bold;
       color: #000;
+      margin-top: 15px;
       margin-bottom: 10px;
       display: block;
     }
@@ -123,10 +124,10 @@
     .speech-content {
       color: #000; /* 言论纯黑 */
       line-height: 1.8;
-      margin-bottom: 15px;
+      margin-bottom: 6px;
     }
     .comment-content {
-      color: #4F4F4F; /* 评论浅黑 */
+      color: #C0C0C0; /* 评论银灰 */
       line-height: 1.8;
     }
 
@@ -181,7 +182,7 @@
     <h1 class="page-title"><%= tag %></h1>
     <% speeches.forEach((item, index) => { %>
       <div class="speech-item">
-        <!-- 中文数字序号 - H3级别 -->
+        <!-- 中文数字序号 -->
         <h2 class="speech-number"><%= item.chineseNumber %></h2>
         <!-- 言论内容 -->
         <div class="speech-content"><%- item.mainContent %></div>
