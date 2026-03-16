@@ -44,13 +44,15 @@ function numberToChinese(num) {
   return chnStr || "零";
 }
 
-// 工具函数：处理换行规则（纯文本处理，不生成HTML标签）
+// 工具函数：处理换行规则（纯文本处理，解决<br>显示问题）
 function formatContent(content) {
   if (!content) return "无内容";
   // 步骤1：将\r\n统一为\n
   let formatted = content.replace(/\r\n/g, "\n");
-  // 步骤2：直接替换为换行符（交给HTML渲染）
-  // 不再生成<br>标签，避免标签显示
+  // 步骤2：将换行符转换为HTML的<br>标签（在模板中正常渲染）
+  // 这里生成<br>，然后让EJS使用默认转义，确保内容正确显示
+  formatted = formatted.replace(/\n\n+/g, "<br><br>");
+  formatted = formatted.replace(/\n/g, "<br>");
   return formatted;
 }
 
@@ -122,12 +124,11 @@ function buildPageHtml(tags) {
       });
     }
 
-    // 渲染模板（开启转义，避免HTML标签显示）
     const html = ejs.render(pageTemplate, {
       tag: tag,
       tags: tags, // 所有标签（用于侧边目录）
       speeches: speeches
-    }, { escape: true }); // 关键：开启转义，避免<br>等标签显示
+    }); // 移除了错误的 { escape: true } 配置
 
     // 写入HTML文件
     fs.mkdirSync(DIST_DIR, { recursive: true });
@@ -150,11 +151,11 @@ function buildIndexHtml(tags) {
     tagCount[tag] = txtFiles.length;
   }
 
-  // 渲染模板（开启转义）
+  // 修复：移除错误的 escape 配置
   const html = ejs.render(indexTemplate, {
     tags: tags,
     tagCount: tagCount
-  }, { escape: true });
+  }); // 移除了错误的 { escape: true } 配置
 
   // 写入首页
   fs.writeFileSync(path.join(DIST_DIR, "index.html"), html, "utf8");
@@ -191,5 +192,5 @@ function main() {
 // 启动编译
 main();
 
-// 新增：解决HTTPS证书/超时等环境问题
+// 解决HTTPS证书/超时等环境问题
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
