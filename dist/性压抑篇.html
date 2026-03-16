@@ -15,11 +15,11 @@
       min-height: 100vh;
     }
 
-    /* 菜单按钮（仅移动端显示） */
+    /* 菜单按钮（仅移动端显示）- 移回左侧 */
     .menu-btn {
       position: fixed;
       top: 15px;
-      right: 15px; /* 改到右侧避免遮挡内容 */
+      left: 15px; /* 修复：移回左侧 */
       width: 40px;
       height: 40px;
       background-color: #fff;
@@ -41,7 +41,7 @@
       transition: all 0.2s;
     }
 
-    /* 侧边目录（仅移动端显示） */
+    /* 侧边目录（移动端显示，桌面端也可通过按钮显示） */
     .sidebar {
       position: fixed;
       top: 0;
@@ -54,7 +54,7 @@
       overflow-y: auto;
       transition: left 0.3s ease;
       z-index: 1000;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.1); /* 增加阴影层级 */
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
     }
     .sidebar.open { left: 0; }
     .sidebar .home-link {
@@ -83,7 +83,7 @@
       padding-left: 8px;
     }
 
-    /* 遮罩层（移动端目录展开时显示） */
+    /* 遮罩层 */
     .overlay {
       position: fixed;
       top: 0;
@@ -110,26 +110,24 @@
       padding-bottom: 10px;
     }
 
-    /* 言论样式（纯黑）- 与评论仅颜色差异 */
-    .speech {
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 25px;
-      color: #000; /* 纯黑 */
-      line-height: 1.8;
-      background-color: #fff;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    /* 序号样式 - H3级别 */
+    .speech-number {
+      font-size: 20px;
+      font-weight: bold;
+      color: #000;
+      margin-bottom: 10px;
+      display: block;
     }
 
-    /* 评论样式（浅黑 #4F4F4F）- 仅颜色差异，无缩进/背景差异 */
-    .comment {
-      padding: 20px;
-      border-radius: 8px;
-      margin: 15px 0 0 0; /* 取消缩进 */
-      color: #4F4F4F; /* 浅黑 */
+    /* 言论和评论样式 - 完全一致（仅颜色差异） */
+    .speech-content {
+      color: #000; /* 言论纯黑 */
       line-height: 1.8;
-      background-color: #fff; /* 统一背景色 */
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* 统一阴影 */
+      margin-bottom: 15px;
+    }
+    .comment-content {
+      color: #4F4F4F; /* 评论浅黑 */
+      line-height: 1.8;
     }
 
     /* 移动端适配 */
@@ -140,29 +138,32 @@
       .page-title {
         font-size: 24px;
       }
-      .speech, .comment {
-        padding: 15px;
-        margin-bottom: 20px;
-      }
       .menu-btn {
-        display: flex;
+        display: flex; /* 移动端显示菜单按钮 */
       }
       .sidebar {
         width: 250px;
         left: -250px;
       }
     }
+
+    /* 桌面端也显示菜单按钮 */
+    @media (min-width: 769px) {
+      .menu-btn {
+        display: flex; /* 桌面端也显示 */
+      }
+    }
   </style>
 </head>
 <body>
-  <!-- 移动端菜单按钮 -->
+  <!-- 菜单按钮 -->
   <div class="menu-btn" id="menuBtn">
     <span></span>
     <span></span>
     <span></span>
   </div>
 
-  <!-- 移动端侧边目录 -->
+  <!-- 侧边目录 -->
   <div class="sidebar" id="sidebar">
     <a href="/" class="home-link">🏠 回到主页</a>
     
@@ -176,23 +177,31 @@
     
   </div>
 
-  <!-- 移动端遮罩层 -->
+  <!-- 遮罩层 -->
   <div class="overlay" id="overlay"></div>
 
   <!-- 主内容 -->
   <div class="container">
     <h1 class="page-title">性压抑篇</h1>
     
-      <div class="speech">
-        这是一个测试。&lt;br&gt;峰哥曰：一切都是性压抑
+      <div class="speech-item">
+        <!-- 中文数字序号 - H3级别 -->
+        <h3 class="speech-number">壹</h3>
+        <!-- 言论内容 -->
+        <div class="speech-content">这是一个测试。&lt;br&gt;峰哥曰：一切都是性压抑</div>
+        <!-- 评论内容 -->
         
       </div>
     
-      <div class="speech">
-        哈基米haji
+      <div class="speech-item">
+        <!-- 中文数字序号 - H3级别 -->
+        <h3 class="speech-number">贰</h3>
+        <!-- 言论内容 -->
+        <div class="speech-content">哈基米haji</div>
+        <!-- 评论内容 -->
         
           
-            <div class="comment">评论1</div>
+            <div class="comment-content">评论1</div>
           
         
       </div>
