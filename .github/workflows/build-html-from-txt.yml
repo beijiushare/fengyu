@@ -1,14 +1,7 @@
-# .github/workflows/build-html-from-txt.yml
 name: Build HTML from TXT
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 4,6,8,12,14,18,20,0 * * *'
-  push:
-    paths:
-      - 'doc/**'
-
+  workflow_dispatch:  
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -68,19 +61,17 @@ jobs:
             echo "✅ 无HTML变更，跳过提交"
           fi
 
-      # ===== 新增：部署到Netlify（仅当doc有变更时执行）=====
+      # 部署到Netlify（仅当doc有变更时执行）
       - name: 部署到Netlify
         if: steps.check_doc.outputs.changed == 'true'
         uses: netlify/actions/cli@master
         with:
-          # 部署dist目录到生产环境，覆盖Netlify原有内容
           args: deploy --prod --dir=dist
         env:
-          # 引用GitHub Secrets中配置的密钥（需提前添加）
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
 
-      # ===== 新增：输出部署结果 =====
+      # 输出部署结果
       - name: 部署结果提示
         if: steps.check_doc.outputs.changed == 'true'
         run: echo "✅ Netlify部署完成！可访问你的Netlify站点查看最新内容"
