@@ -76,42 +76,31 @@ async function fetchMainIssues() {
   return issues;
 }
 
-// 步骤2：拉取单个Issue的所有回复（评述）
-async function fetchIssueComments(issueNumber) {
-  const comments = [];
-  let page = 1;
-  const perPage = 100;
-
-  while (true) {
-    try {
-      const { data } = await octokit.issues.listComments({
-        owner: REPO_OWNER,
-        repo: REPO_NAME,
-        issue_number: issueNumber,
-        per_page: perPage,
-        page
-      });
-
-      if (data.length === 0) break;
-      comments.push(...data);
-
-      if (data.length < perPage) break;
-      page++;
-      await new Promise(resolve => setTimeout(resolve, 500));
-    } catch (error) {
-      console.error(`❌ 拉取Issue #${issueNumber} 的回复失败：`, error.message);
-      break; // 单个Issue回复拉取失败，跳过该Issue的回复
-    }
+// 步骤2：解析Issue正文，按格式分割言论本体和评论
+function parseIssueContent(issueBody) {
+  if (!issueBody) {
+    return {
+      mainContent: "无内容",
+      comments: []
+    };
   }
 
-  return comments;
+  // 按---分割，去除空行和多余空格
+  const parts = issueBody.split('---').map(part => part.trim()).filter(part => part);
+  
+  // 言论本体：第一个分割部分
+  const mainContent = parts.length > 0 ? parts[0] : "无内容";
+  // 评论部分：分割后的剩余部分
+  const comments = parts.length > 1 ? parts.slice(1) : [];
+
+  return { mainContent, comments };
 }
 
-// 步骤3：生成TXT内容并计算哈希（核心修改：过滤无标签Issue+移除峰语标题）
+// 步骤3：生成TXT内容并计算哈希（适配新格式）
 async function generateTxtContent(issues) {
   if (issues.length === 0) return "";
 
-  const allContent = [];
+  const allValidContent = [];
   // 确保doc目录存在
   fs.mkdirSync(DOC_DIR, { recursive: true });
 
@@ -128,21 +117,17 @@ async function generateTxtContent(issues) {
     // 有标签时，取第一个标签的名称
     const tag = issue.labels[0].name;
     
-    // 核心修改：只保留正文，删除「峰语」标题
-    const mainContent = issue.body || "无内容";
+    // 解析Issue正文（按---分割言论和评论）
+    const { mainContent, comments } = parseIssueContent(issue.body);
     
-    // 拉取回复（评述）
-    console.log(`📝 处理Issue #${issueNumber}（标签：${tag}），拉取回复中...`);
-    const comments = await fetchIssueComments(issueNumber);
+    // 按指定格式拼接最终内容
+    let fullContent = mainContent;
+    if (comments.length > 0) {
+      fullContent += '\n' + comments.map(comment => `---\n${comment}`).join('\n');
+    }
     
-    // 拼接评述内容（移除评述ID显示，只保留内容）
-    const commentContent = comments.map((comment) => 
-      `\n\n${comment.body || "无内容"}`
-    ).join("");
-    
-    // 合并内容
-    const fullContent = mainContent + commentContent;
-    allContent.push(fullContent);
+    // 收集有效内容用于哈希计算
+    allValidContent.push(fullContent);
     
     // 创建标签文件夹并写入TXT
     const tagDir = path.join(DOC_DIR, tag);
@@ -157,9 +142,9 @@ async function generateTxtContent(issues) {
     }
   }
 
-  // 计算所有内容的MD5哈希（用于增量检测）
-  const hash = allContent.length > 0 
-    ? crypto.createHash("md5").update(allContent.join("")).digest("hex")
+  // 计算所有有效内容的MD5哈希（用于增量检测）
+  const hash = allValidContent.length > 0 
+    ? crypto.createHash("md5").update(allValidContent.join("")).digest("hex")
     : "";
   
   return hash;
@@ -207,7 +192,7 @@ async function main() {
     // 步骤1：拉取Issue
     const issues = await fetchMainIssues();
     
-    // 步骤2：生成TXT和哈希
+    // 步骤2：生成TXT和哈希（不再拉取评论，直接解析Issue正文）
     const newHash = await generateTxtContent(issues);
     
     // 步骤3：增量检测
