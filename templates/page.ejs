@@ -182,13 +182,13 @@
     <% speeches.forEach((item, index) => { %>
       <div class="speech-item">
         <!-- 中文数字序号 - H3级别 -->
-        <h3 class="speech-number"><%= item.chineseNumber %></h3>
+        <h2 class="speech-number"><%= item.chineseNumber %></h2>
         <!-- 言论内容 -->
-        <div class="speech-content"><%= item.mainContent %></div>
+        <div class="speech-content"><%- item.mainContent %></div>
         <!-- 评论内容 -->
         <% if (item.comments.length) { %>
           <% item.comments.forEach(comment => { %>
-            <div class="comment-content"><%= comment %></div>
+            <div class="comment-content"><%- comment %></div>
           <% }) %>
         <% } %>
       </div>
