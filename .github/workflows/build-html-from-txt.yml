@@ -8,6 +8,9 @@ on:
     paths:
       - 'doc/**'  # doc文件夹变更时自动触发（可选）
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # 强制使用Node.js 24
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,10 +18,12 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 设置 Node.js
+      - name: 设置 Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24  # 升级到Node.js 24
+          cache: 'npm'
+          cache-dependency-path: './package-lock.json'
 
       - name: 检测doc文件夹是否变更（增量检测）
         id: check_doc
@@ -38,7 +43,9 @@ jobs:
 
       - name: 安装模板引擎依赖
         if: steps.check_doc.outputs.changed == 'true'
-        run: npm install ejs
+        run: |
+          npm install
+          npm cache clean --force
 
       - name: 编译TXT到HTML（仅当有变更时）
         if: steps.check_doc.outputs.changed == 'true'
