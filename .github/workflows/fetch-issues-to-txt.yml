@@ -5,6 +5,9 @@ on:
   schedule:
     - cron: '0 2,5,7,11,13,17,19,23 * * *'  # 每天2/5/7/11/13/17/19/23点整触发
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # 强制使用Node.js 24
+
 jobs:
   fetch:
     runs-on: ubuntu-latest
@@ -12,14 +15,17 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 设置 Node.js
+      - name: 设置 Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24  # 升级到Node.js 24
           cache: 'npm'
+          cache-dependency-path: './package-lock.json'
 
-      - name: 安装依赖
-        run: npm install @octokit/rest
+      - name: 安装依赖（生成lock文件）
+        run: |
+          npm install
+          npm cache clean --force
 
       - name: 拉取 Issue 并生成 TXT（带增量检测）
         env:
@@ -32,7 +38,7 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git add doc/ data-hash.txt
+          git add doc/ data-hash.txt package-lock.json  # 提交自动生成的lock文件
           # 检测是否有变更，无变更则跳过提交
           if git diff --quiet --staged; then
             echo "✅ 无内容变更，跳过提交"
