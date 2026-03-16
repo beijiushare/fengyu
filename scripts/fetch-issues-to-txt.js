@@ -107,7 +107,7 @@ async function fetchIssueComments(issueNumber) {
   return comments;
 }
 
-// 步骤3：生成TXT内容并计算哈希（核心修改：过滤无标签Issue）
+// 步骤3：生成TXT内容并计算哈希（核心修改：过滤无标签Issue+移除峰语标题）
 async function generateTxtContent(issues) {
   if (issues.length === 0) return "";
 
@@ -119,25 +119,25 @@ async function generateTxtContent(issues) {
   for (const issue of issues) {
     const issueNumber = issue.number;
     
-    // ===== 核心修改：过滤无标签的Issue =====
+    // 过滤无标签的Issue
     if (issue.labels.length === 0) {
       console.log(`ℹ️ Issue #${issueNumber} 未打标签，直接过滤，不生成TXT`);
       continue; // 跳过当前Issue，不执行后续操作
     }
     
-    // 有标签时，取第一个标签的名称（不再用默认值）
+    // 有标签时，取第一个标签的名称
     const tag = issue.labels[0].name;
     
-    // 主言论内容（标题+正文），容错空内容
-    const mainContent = `${issue.title || ""}\n\n${issue.body || "无内容"}`;
+    // 核心修改：只保留正文，删除「峰语」标题
+    const mainContent = issue.body || "无内容";
     
     // 拉取回复（评述）
     console.log(`📝 处理Issue #${issueNumber}（标签：${tag}），拉取回复中...`);
     const comments = await fetchIssueComments(issueNumber);
     
-    // 拼接评述内容，容错空回复
-    const commentContent = comments.map((comment, index) => 
-      `\n\n--- 评述${index + 1}（ID:${comment.id}）--- \n${comment.body || "无内容"}`
+    // 拼接评述内容（移除评述ID显示，只保留内容）
+    const commentContent = comments.map((comment) => 
+      `\n\n${comment.body || "无内容"}`
     ).join("");
     
     // 合并内容
