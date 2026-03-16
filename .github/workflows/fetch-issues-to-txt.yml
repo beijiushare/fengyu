@@ -2,8 +2,15 @@ name: Fetch Issues to TXT
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 * * * *'  # 改为每小时整点触发
+  issues:
+    types: [opened, edited, closed, reopened, labeled, unlabeled]
+  issue_comment:
+    types: [created, edited, deleted]
+    
+# 并发锁
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 # 核心：强制Node.js 24 + 提升Git推送权限
 env:
