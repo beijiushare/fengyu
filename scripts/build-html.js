@@ -9,16 +9,48 @@ const PAGE_TEMPLATE_PATH = path.join(TEMPLATE_DIR, "page.ejs"); // 分篇模板
 const INDEX_TEMPLATE_PATH = path.join(TEMPLATE_DIR, "index.ejs"); // 主页模板
 const DIST_DIR = path.join(__dirname, "../dist");
 
-// 工具函数：处理换行规则（单换行保留，双换行换段）
-// 修复HTML标签被渲染的问题：改为纯文本处理，不手动加p标签（交给EJS转义）
+// 工具函数：中文数字转换（0-999）
+function numberToChinese(num) {
+  const chnNumChar = ["零", "壹", "贰", "叁", "肆", "伍", "陆", "柒", "捌", "玖"];
+  const chnUnitChar = ["", "拾", "佰", "仟"];
+  
+  if (num === 0) return "零";
+  
+  let str = num.toString();
+  let chnStr = "";
+  let zeroFlag = false; // 零的标志
+  let unitPos = 0;
+  
+  for (let i = str.length - 1; i >= 0; i--) {
+    const digit = parseInt(str[i]);
+    if (digit === 0) {
+      if (zeroFlag) continue;
+      zeroFlag = true;
+      chnStr = chnNumChar[0] + chnStr;
+    } else {
+      zeroFlag = false;
+      chnStr = chnNumChar[digit] + chnUnitChar[unitPos] + chnStr;
+    }
+    unitPos++;
+  }
+  
+  // 去除开头的零
+  chnStr = chnStr.replace(/^零+/, "");
+  // 处理拾开头的情况（如11 -> 壹拾壹，而非拾壹）
+  if (chnStr.startsWith("拾")) {
+    chnStr = "壹" + chnStr;
+  }
+  
+  return chnStr || "零";
+}
+
+// 工具函数：处理换行规则（纯文本处理，不生成HTML标签）
 function formatContent(content) {
   if (!content) return "无内容";
   // 步骤1：将\r\n统一为\n
   let formatted = content.replace(/\r\n/g, "\n");
-  // 步骤2：双换行替换为<br><br>（换段），单换行保留为<br>
-  formatted = formatted.replace(/\n\n+/g, "<br><br>");
-  formatted = formatted.replace(/\n/g, "<br>");
-  // 不再手动包裹p标签，避免标签被显示
+  // 步骤2：直接替换为换行符（交给HTML渲染）
+  // 不再生成<br>标签，避免标签显示
   return formatted;
 }
 
@@ -57,12 +89,20 @@ function buildPageHtml(tags) {
 
   for (const tag of tags) {
     const tagDir = path.join(DOC_DIR, tag);
-    const txtFiles = fs.readdirSync(tagDir)
+    let txtFiles = fs.readdirSync(tagDir)
       .filter(file => file.endsWith(".txt"));
+    
+    // 按文件名（Issue ID）数字排序
+    txtFiles = txtFiles.sort((a, b) => {
+      const numA = parseInt(a.replace(".txt", ""));
+      const numB = parseInt(b.replace(".txt", ""));
+      return numA - numB;
+    });
     
     // 处理每个TXT文件（拆分言论和评论：--- 分隔）
     const speeches = [];
-    for (const txtFile of txtFiles) {
+    for (let i = 0; i < txtFiles.length; i++) {
+      const txtFile = txtFiles[i];
       const txtPath = path.join(tagDir, txtFile);
       const content = fs.readFileSync(txtPath, "utf8");
       
@@ -71,19 +111,23 @@ function buildPageHtml(tags) {
       const mainContent = formatContent(contentBlocks[0]);
       const comments = contentBlocks.slice(1).filter(block => block).map(block => formatContent(block));
       
+      // 生成中文数字序号（从1开始）
+      const chineseNumber = numberToChinese(i + 1);
+      
       speeches.push({
         id: txtFile.replace(".txt", ""),
         mainContent: mainContent,
-        comments: comments
+        comments: comments,
+        chineseNumber: chineseNumber // 添加中文序号
       });
     }
 
-    // 渲染模板（关闭转义，避免HTML标签被转义）
+    // 渲染模板（开启转义，避免HTML标签显示）
     const html = ejs.render(pageTemplate, {
       tag: tag,
       tags: tags, // 所有标签（用于侧边目录）
       speeches: speeches
-    }, { escape: false }); // 关键：关闭EJS转义，让<br>生效
+    }, { escape: true }); // 关键：开启转义，避免<br>等标签显示
 
     // 写入HTML文件
     fs.mkdirSync(DIST_DIR, { recursive: true });
@@ -106,11 +150,11 @@ function buildIndexHtml(tags) {
     tagCount[tag] = txtFiles.length;
   }
 
-  // 渲染模板（关闭转义）
+  // 渲染模板（开启转义）
   const html = ejs.render(indexTemplate, {
     tags: tags,
     tagCount: tagCount
-  }, { escape: false });
+  }, { escape: true });
 
   // 写入首页
   fs.writeFileSync(path.join(DIST_DIR, "index.html"), html, "utf8");
@@ -146,3 +190,6 @@ function main() {
 
 // 启动编译
 main();
+
+// 新增：解决HTTPS证书/超时等环境问题
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
