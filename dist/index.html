@@ -12,19 +12,62 @@
       color: #333; 
       background-color: #f9f9f9;
       padding: 0;
+      height: 100vh; /* 桌面端占满视口高度 */
+      overflow: hidden; /* 桌面端禁止整体滚动 */
     }
 
-    /* 菜单按钮 */
+    /* 桌面端布局：左右分栏 */
+    .desktop-layout {
+      display: flex;
+      height: 100vh;
+    }
+    .desktop-left {
+      width: 40%;
+      height: 100%;
+    }
+    .desktop-left img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* 图片铺满容器 */
+    }
+    .desktop-right {
+      width: 60%;
+      height: 100%;
+      overflow-y: auto; /* 目录区域滚动 */
+      padding: 40px;
+      background-color: #fff;
+    }
+
+    /* 移动端布局：上下分栏 */
+    .mobile-layout {
+      display: none;
+      min-height: 100vh;
+    }
+    .mobile-top {
+      width: 100%;
+      height: 300px;
+    }
+    .mobile-top img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .mobile-bottom {
+      width: 100%;
+      padding: 20px;
+    }
+
+    /* 菜单按钮（仅移动端显示） */
     .menu-btn {
       position: fixed;
       top: 15px;
-      left: 15px;
+      right: 15px; /* 改到右侧避免遮挡图片 */
       width: 40px;
       height: 40px;
       background-color: #fff;
       border: 1px solid #eee;
       border-radius: 8px;
-      display: flex;
+      display: none; /* 桌面端隐藏 */
       flex-direction: column;
       justify-content: center;
       align-items: center;
@@ -39,7 +82,7 @@
       margin: 2px 0;
     }
 
-    /* 侧边目录 */
+    /* 侧边目录（仅移动端显示） */
     .sidebar {
       position: fixed;
       top: 0;
@@ -48,10 +91,11 @@
       height: 100vh;
       background-color: #fff;
       border-right: 1px solid #eee;
-      padding: 20px;
+      padding: 60px 20px 20px; /* 顶部留空避免被菜单按钮遮挡 */
       overflow-y: auto;
       transition: left 0.3s ease;
       z-index: 1000;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1); /* 增加阴影层级 */
     }
     .sidebar.open { left: 0; }
     .sidebar .home-link {
@@ -79,12 +123,7 @@
       padding-left: 8px;
     }
 
-    /* 内容容器 */
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 80px 20px 40px;
-    }
+    /* 通用标题样式 */
     .page-title {
       font-size: 32px;
       margin-bottom: 40px;
@@ -100,7 +139,7 @@
       margin-top: 20px;
     }
     .tag-item {
-      background-color: #fff;
+      background-color: #f9f9f9;
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -123,18 +162,47 @@
       margin-top: 8px;
     }
 
-    /* 更新时间 */
-    .update-time {
+    /* README链接样式 */
+    .readme-link {
+      display: block;
       margin-top: 40px;
-      color: #999;
-      font-size: 14px;
       text-align: center;
+      color: #666;
+      text-decoration: none;
+      font-size: 14px;
     }
+    .readme-link:hover {
+      color: #000;
+      text-decoration: underline;
+    }
+
+    /* 遮罩层（移动端目录展开时显示） */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0,0,0,0.3);
+      z-index: 999;
+      display: none;
+    }
+    .overlay.show { display: block; }
 
     /* 移动端适配 */
     @media (max-width: 768px) {
-      .container {
-        padding: 70px 15px 30px;
+      body {
+        overflow: auto; /* 移动端允许滚动 */
+        height: auto;
+      }
+      .desktop-layout {
+        display: none;
+      }
+      .mobile-layout {
+        display: block;
+      }
+      .menu-btn {
+        display: flex;
       }
       .page-title {
         font-size: 26px;
@@ -153,14 +221,14 @@
   </style>
 </head>
 <body>
-  <!-- 菜单按钮 -->
+  <!-- 移动端菜单按钮 -->
   <div class="menu-btn" id="menuBtn">
     <span></span>
     <span></span>
     <span></span>
   </div>
 
-  <!-- 侧边目录 -->
+  <!-- 移动端侧边目录 -->
   <div class="sidebar" id="sidebar">
     <a href="/" class="home-link">🏠 回到主页</a>
     
@@ -170,44 +238,92 @@
     
   </div>
 
-  <!-- 主内容 -->
-  <div class="container">
-    <h1 class="page-title">峰语 汇总</h1>
-    <div class="tag-list">
-      
-        <div class="tag-item">
-          <a href="./性压抑篇.html" class="tag-link">性压抑篇</a>
-          <div class="tag-count">共 2 条言论</div>
-        </div>
-      
-        <div class="tag-item">
-          <a href="./杂篇.html" class="tag-link">杂篇</a>
-          <div class="tag-count">共 1 条言论</div>
-        </div>
-      
+  <!-- 移动端遮罩层 -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- 桌面端布局 -->
+  <div class="desktop-layout">
+    <div class="desktop-left">
+      <!-- 替换为实际的webp图片路径 -->
+      <img src="./bg.webp" alt="峰语背景图">
     </div>
-    <div class="update-time">最后更新：2026/3/16 10:46:01</div>
+    <div class="desktop-right">
+      <h1 class="page-title">峰语 汇总</h1>
+      <div class="tag-list">
+        
+          <div class="tag-item">
+            <a href="./性压抑篇.html" class="tag-link">性压抑篇</a>
+            <div class="tag-count">共 2 条言论</div>
+          </div>
+        
+          <div class="tag-item">
+            <a href="./杂篇.html" class="tag-link">杂篇</a>
+            <div class="tag-count">共 1 条言论</div>
+          </div>
+        
+      </div>
+      <!-- README链接 -->
+      <a href="https://github.com/beijiushare/fengyu/blob/main/README.md" class="readme-link" target="_blank">📖 查看项目说明</a>
+    </div>
+  </div>
+
+  <!-- 移动端布局 -->
+  <div class="mobile-layout">
+    <div class="mobile-top">
+      <img src="./bg.webp" alt="峰语背景图">
+    </div>
+    <div class="mobile-bottom">
+      <h1 class="page-title">峰语 汇总</h1>
+      <div class="tag-list">
+        
+          <div class="tag-item">
+            <a href="./性压抑篇.html" class="tag-link">性压抑篇</a>
+            <div class="tag-count">共 2 条言论</div>
+          </div>
+        
+          <div class="tag-item">
+            <a href="./杂篇.html" class="tag-link">杂篇</a>
+            <div class="tag-count">共 1 条言论</div>
+          </div>
+        
+      </div>
+    </div>
   </div>
 
   <script>
-    // 侧边目录切换
+    // 移动端目录交互
     const menuBtn = document.getElementById('menuBtn');
     const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
     
-    menuBtn.addEventListener('click', () => {
+    // 打开/关闭目录
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // 阻止事件冒泡
       sidebar.classList.toggle('open');
-      // 移动端适配
-      if (window.innerWidth <= 768) {
-        document.body.style.paddingLeft = sidebar.classList.contains('open') ? '250px' : '0';
+      overlay.classList.toggle('show');
+      // 移动端不挤压页面
+      document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : 'auto';
+    });
+
+    // 点击遮罩层/页面空白处关闭目录
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.style.overflow = 'auto';
+    });
+
+    // 点击页面其他区域关闭目录
+    document.addEventListener('click', (e) => {
+      if (!sidebar.contains(e.target) && e.target !== menuBtn) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+        document.body.style.overflow = 'auto';
       }
     });
 
-    window.addEventListener('resize', () => {
-      if (window.innerWidth > 768) {
-        document.body.style.paddingLeft = '0';
-      } else if (sidebar.classList.contains('open')) {
-        document.body.style.paddingLeft = '250px';
-      }
+    // 阻止目录内点击事件冒泡
+    sidebar.addEventListener('click', (e) => {
+      e.stopPropagation();
     });
   </script>
 </body>
