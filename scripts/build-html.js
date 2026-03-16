@@ -9,17 +9,17 @@ const PAGE_TEMPLATE_PATH = path.join(TEMPLATE_DIR, "page.ejs"); // 分篇模板
 const INDEX_TEMPLATE_PATH = path.join(TEMPLATE_DIR, "index.ejs"); // 主页模板
 const DIST_DIR = path.join(__dirname, "../dist");
 
-// 工具函数：处理换行规则（单换行忽略，双换行换段）
+// 工具函数：处理换行规则（单换行保留，双换行换段）
+// 修复HTML标签被渲染的问题：改为纯文本处理，不手动加p标签（交给EJS转义）
 function formatContent(content) {
   if (!content) return "无内容";
   // 步骤1：将\r\n统一为\n
   let formatted = content.replace(/\r\n/g, "\n");
-  // 步骤2：双换行替换为</p><p>（换段）
-  formatted = formatted.replace(/\n\n+/g, "</p><p>");
-  // 步骤3：单换行直接移除
-  formatted = formatted.replace(/\n/g, "");
-  // 步骤4：包裹外层p标签
-  return `<p>${formatted}</p>`;
+  // 步骤2：双换行替换为<br><br>（换段），单换行保留为<br>
+  formatted = formatted.replace(/\n\n+/g, "<br><br>");
+  formatted = formatted.replace(/\n/g, "<br>");
+  // 不再手动包裹p标签，避免标签被显示
+  return formatted;
 }
 
 // 工具函数：获取所有标签（分篇）
@@ -60,16 +60,16 @@ function buildPageHtml(tags) {
     const txtFiles = fs.readdirSync(tagDir)
       .filter(file => file.endsWith(".txt"));
     
-    // 处理每个TXT文件（拆分言论和评论）
+    // 处理每个TXT文件（拆分言论和评论：--- 分隔）
     const speeches = [];
     for (const txtFile of txtFiles) {
       const txtPath = path.join(tagDir, txtFile);
       const content = fs.readFileSync(txtPath, "utf8");
       
-      // 拆分：双换行分隔言论和评论（第一个块是言论，后面都是评论）
-      const contentBlocks = content.split(/\n\n+/);
+      // 拆分：--- 分隔言论和评论（第一个块是言论，后面都是评论）
+      const contentBlocks = content.split(/---\s*/).map(block => block.trim());
       const mainContent = formatContent(contentBlocks[0]);
-      const comments = contentBlocks.slice(1).map(block => formatContent(block));
+      const comments = contentBlocks.slice(1).filter(block => block).map(block => formatContent(block));
       
       speeches.push({
         id: txtFile.replace(".txt", ""),
@@ -78,13 +78,12 @@ function buildPageHtml(tags) {
       });
     }
 
-    // 渲染模板
+    // 渲染模板（关闭转义，避免HTML标签被转义）
     const html = ejs.render(pageTemplate, {
       tag: tag,
       tags: tags, // 所有标签（用于侧边目录）
-      speeches: speeches,
-      updateTime: new Date().toLocaleString("zh-CN")
-    });
+      speeches: speeches
+    }, { escape: false }); // 关键：关闭EJS转义，让<br>生效
 
     // 写入HTML文件
     fs.mkdirSync(DIST_DIR, { recursive: true });
@@ -107,12 +106,11 @@ function buildIndexHtml(tags) {
     tagCount[tag] = txtFiles.length;
   }
 
-  // 渲染模板
+  // 渲染模板（关闭转义）
   const html = ejs.render(indexTemplate, {
     tags: tags,
-    tagCount: tagCount,
-    updateTime: new Date().toLocaleString("zh-CN")
-  });
+    tagCount: tagCount
+  }, { escape: false });
 
   // 写入首页
   fs.writeFileSync(path.join(DIST_DIR, "index.html"), html, "utf8");
