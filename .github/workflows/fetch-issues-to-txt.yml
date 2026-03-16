@@ -1,48 +1,64 @@
 # .github/workflows/fetch-issues-to-txt.yml
 name: Fetch Issues to TXT
 on:
-  workflow_dispatch:  # 手动触发
+  workflow_dispatch:
   schedule:
-    - cron: '0 2,5,7,11,13,17,19,23 * * *'  # 每天2/5/7/11/13/17/19/23点整触发
+    - cron: '0 2,5,7,11,13,17,19,23 * * *'
 
+# 核心：强制Node.js 24 + 提升Git推送权限
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # 强制使用Node.js 24
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
 
 jobs:
   fetch:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 明确授予写入代码的权限
+      issues: read     # 明确授予读取Issue的权限
     steps:
-      - name: 检出代码
+      - name: 检出代码（升级到Node.js 24兼容版）
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 拉取完整历史，避免Git提交冲突
 
-      - name: 设置 Node.js 24
+      - name: 设置Node.js 24（指定镜像加速）
         uses: actions/setup-node@v4
         with:
-          node-version: 24  # 升级到Node.js 24
+          node-version: 24.x
           cache: 'npm'
           cache-dependency-path: './package-lock.json'
+          registry-url: https://registry.npmjs.org/
 
-      - name: 安装依赖（生成lock文件）
+      - name: 安装依赖（确保lock文件生成）
         run: |
-          npm install
+          npm install --force
           npm cache clean --force
+          # 生成lock文件（首次运行必备）
+          if [ ! -f package-lock.json ]; then
+            npm init -y
+            npm install @octokit/rest ejs --save
+          fi
 
-      - name: 拉取 Issue 并生成 TXT（带增量检测）
+      - name: 拉取Issue并生成TXT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO_OWNER: ${{ github.repository_owner }}
           REPO_NAME: ${{ github.event.repository.name }}
         run: node scripts/fetch-issues-to-txt.js
 
-      - name: 提交 TXT 文件变更（仅当有变更时）
+      - name: 提交变更（容错处理，避免无变更报错）
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add doc/ data-hash.txt package-lock.json  # 提交自动生成的lock文件
-          # 检测是否有变更，无变更则跳过提交
-          if git diff --quiet --staged; then
-            echo "✅ 无内容变更，跳过提交"
-          else
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          # 仅添加有变更的文件
+          git add doc/ data-hash.txt package-lock.json || true
+          # 检查是否有变更，无变更则跳过
+          if ! git diff --quiet --staged; then
             git commit -m "chore: update issues to txt [skip ci]"
-            git push
+            # 强制推送（解决分支冲突）
+            git push origin HEAD:main --force-with-lease
+            echo "✅ 提交成功"
+          else
+            echo "✅ 无内容变更，跳过提交"
           fi
