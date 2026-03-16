@@ -1,9 +1,9 @@
-# .github/workflows/fetch-issues-to-txt.yml
 name: Fetch Issues to TXT
+
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 2,5,7,11,13,17,19,23 * * *'
+    - cron: '0 * * * *'  # 改为每小时整点触发
 
 # 核心：强制Node.js 24 + 提升Git推送权限
 env:
@@ -16,6 +16,7 @@ jobs:
     permissions:
       contents: write  # 明确授予写入代码的权限
       issues: read     # 明确授予读取Issue的权限
+      actions: write   # 新增：授予触发其他工作流的权限
     steps:
       - name: 检出代码（升级到Node.js 24兼容版）
         uses: actions/checkout@v4
@@ -41,13 +42,23 @@ jobs:
           fi
 
       - name: 拉取Issue并生成TXT
+        id: fetch_issues  # 新增ID，用于后续判断是否有变更
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO_OWNER: ${{ github.repository_owner }}
           REPO_NAME: ${{ github.event.repository.name }}
-        run: node scripts/fetch-issues-to-txt.js
+        run: |
+          # 执行脚本并捕获输出
+          node scripts/fetch-issues-to-txt.js
+          # 检查是否有文件变更（判断是否需要触发后续工作流）
+          if git diff --quiet doc/ data-hash.txt package-lock.json; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: 提交变更（容错处理，避免无变更报错）
+        if: steps.fetch_issues.outputs.has_changes == 'true'
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -62,3 +73,12 @@ jobs:
           else
             echo "✅ 无内容变更，跳过提交"
           fi
+
+      - name: 触发Build HTML工作流（仅当有变更时）
+        if: steps.fetch_issues.outputs.has_changes == 'true'
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: build-html-from-txt.yml  # 要触发的工作流文件名
+          ref: main  # 触发main分支的工作流
+          token: ${{ secrets.GITHUB_TOKEN }}
+          inputs: '{}'  # 无额外输入参数
