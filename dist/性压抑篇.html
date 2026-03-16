@@ -2,21 +2,217 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>峰语 - 性压抑篇</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
-    .speech { margin: 20px 0; padding: 15px; border: 1px solid #eee; border-radius: 8px; }
-    .comment { margin: 10px 0 0 20px; padding: 10px; border-left: 3px solid #666; color: #555; }
-    .update-time { margin-top: 30px; color: #999; font-size: 14px; }
+    /* 全局样式 */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+      color: #333; 
+      background-color: #f9f9f9;
+      padding-left: 0;
+      transition: padding-left 0.3s ease;
+    }
+
+    /* 侧边目录样式 */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100vh;
+      background-color: #fff;
+      border-right: 1px solid #eee;
+      padding: 20px;
+      overflow-y: auto;
+      transition: left 0.3s ease;
+      z-index: 1000;
+    }
+    .sidebar.open { left: 0; }
+    .sidebar .home-link {
+      display: block;
+      font-size: 18px;
+      font-weight: bold;
+      color: #000;
+      text-decoration: none;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 15px;
+    }
+    .sidebar .tag-link {
+      display: block;
+      font-size: 16px;
+      color: #4F4F4F;
+      text-decoration: none;
+      padding: 8px 0;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    .sidebar .tag-link:hover,
+    .sidebar .tag-link.active {
+      background-color: #f0f0f0;
+      color: #000;
+      padding-left: 8px;
+    }
+
+    /* 菜单按钮 */
+    .menu-btn {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      width: 40px;
+      height: 40px;
+      background-color: #fff;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      z-index: 1001;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .menu-btn span {
+      width: 20px;
+      height: 2px;
+      background-color: #333;
+      margin: 2px 0;
+      transition: all 0.2s;
+    }
+
+    /* 内容容器 */
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 80px 20px 40px;
+    }
+    .page-title {
+      font-size: 28px;
+      margin-bottom: 30px;
+      color: #000;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
+    }
+
+    /* 言论样式（纯黑） */
+    .speech {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      color: #000; /* 纯黑 */
+      line-height: 1.8;
+    }
+
+    /* 评论样式（浅黑 #4F4F4F） */
+    .comment {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0 0 15px;
+      color: #4F4F4F; /* 浅黑 */
+      line-height: 1.8;
+      border-left: 3px solid #ddd;
+    }
+
+    /* 更新时间 */
+    .update-time {
+      margin-top: 40px;
+      color: #999;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+      .container {
+        padding: 70px 15px 30px;
+      }
+      .page-title {
+        font-size: 24px;
+      }
+      .speech {
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+      .comment {
+        padding: 12px;
+        margin-left: 10px;
+      }
+      .sidebar {
+        width: 250px;
+        left: -250px;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>性压抑篇</h1>
-  
-    <div class="speech">
-      峰语&lt;br&gt;&lt;br&gt;这是一个测试。&lt;br&gt;峰哥曰：一切都是性压抑&lt;br&gt;&lt;br&gt;--- 评述1（ID:4066299611）--- &lt;br&gt;6666，还有第二关
-    </div>
-  
-  <div class="update-time">最后更新：2026/3/16 09:33:21</div>
+  <!-- 菜单按钮 -->
+  <div class="menu-btn" id="menuBtn">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
+  <!-- 侧边目录 -->
+  <div class="sidebar" id="sidebar">
+    <a href="/" class="home-link">🏠 回到主页</a>
+    
+      <a href="./性压抑篇.html" class="tag-link active">
+        性压抑篇
+      </a>
+    
+      <a href="./杂篇.html" class="tag-link ">
+        杂篇
+      </a>
+    
+  </div>
+
+  <!-- 主内容 -->
+  <div class="container">
+    <h1 class="page-title">性压抑篇</h1>
+    
+      <div class="speech">
+        &lt;p&gt;这是一个测试。峰哥曰：一切都是性压抑&lt;/p&gt;
+        
+          
+            <div class="comment">&lt;p&gt;6666，还有第二关&lt;/p&gt;</div>
+          
+        
+      </div>
+    
+      <div class="speech">
+        &lt;p&gt;哈基米&lt;/p&gt;
+        
+      </div>
+    
+    <div class="update-time">最后更新：2026/3/16 09:56:47</div>
+  </div>
+
+  <script>
+    // 侧边目录切换
+    const menuBtn = document.getElementById('menuBtn');
+    const sidebar = document.getElementById('sidebar');
+    
+    menuBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      // 移动端适配：打开侧边栏时给body加左内边距
+      if (window.innerWidth <= 768) {
+        document.body.style.paddingLeft = sidebar.classList.contains('open') ? '250px' : '0';
+      }
+    });
+
+    // 窗口大小变化时重置样式
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 768) {
+        document.body.style.paddingLeft = '0';
+      } else if (sidebar.classList.contains('open')) {
+        document.body.style.paddingLeft = '250px';
+      }
+    });
+  </script>
 </body>
 </html>

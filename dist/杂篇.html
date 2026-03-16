@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>峰语 - 汇总</title>
+  <title>峰语 - 杂篇</title>
   <style>
     /* 全局样式 */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -11,35 +11,11 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
       color: #333; 
       background-color: #f9f9f9;
-      padding: 0;
+      padding-left: 0;
+      transition: padding-left 0.3s ease;
     }
 
-    /* 菜单按钮 */
-    .menu-btn {
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      width: 40px;
-      height: 40px;
-      background-color: #fff;
-      border: 1px solid #eee;
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      z-index: 1001;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .menu-btn span {
-      width: 20px;
-      height: 2px;
-      background-color: #333;
-      margin: 2px 0;
-    }
-
-    /* 侧边目录 */
+    /* 侧边目录样式 */
     .sidebar {
       position: fixed;
       top: 0;
@@ -73,10 +49,37 @@
       border-radius: 4px;
       transition: background-color 0.2s;
     }
-    .sidebar .tag-link:hover {
+    .sidebar .tag-link:hover,
+    .sidebar .tag-link.active {
       background-color: #f0f0f0;
       color: #000;
       padding-left: 8px;
+    }
+
+    /* 菜单按钮 */
+    .menu-btn {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      width: 40px;
+      height: 40px;
+      background-color: #fff;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      z-index: 1001;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .menu-btn span {
+      width: 20px;
+      height: 2px;
+      background-color: #333;
+      margin: 2px 0;
+      transition: all 0.2s;
     }
 
     /* 内容容器 */
@@ -86,41 +89,33 @@
       padding: 80px 20px 40px;
     }
     .page-title {
-      font-size: 32px;
-      margin-bottom: 40px;
+      font-size: 28px;
+      margin-bottom: 30px;
       color: #000;
-      text-align: center;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
     }
 
-    /* 分篇列表 */
-    .tag-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 15px;
-      margin-top: 20px;
-    }
-    .tag-item {
+    /* 言论样式（纯黑） */
+    .speech {
       background-color: #fff;
       padding: 20px;
       border-radius: 8px;
+      margin-bottom: 25px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      text-align: center;
-      transition: transform 0.2s, box-shadow 0.2s;
+      color: #000; /* 纯黑 */
+      line-height: 1.8;
     }
-    .tag-item:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    .tag-link {
-      font-size: 18px;
-      color: #000;
-      text-decoration: none;
-      font-weight: 500;
-    }
-    .tag-count {
-      font-size: 14px;
-      color: #999;
-      margin-top: 8px;
+
+    /* 评论样式（浅黑 #4F4F4F） */
+    .comment {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0 0 15px;
+      color: #4F4F4F; /* 浅黑 */
+      line-height: 1.8;
+      border-left: 3px solid #ddd;
     }
 
     /* 更新时间 */
@@ -137,13 +132,15 @@
         padding: 70px 15px 30px;
       }
       .page-title {
-        font-size: 26px;
+        font-size: 24px;
       }
-      .tag-list {
-        grid-template-columns: 1fr;
-      }
-      .tag-item {
+      .speech {
         padding: 15px;
+        margin-bottom: 20px;
+      }
+      .comment {
+        padding: 12px;
+        margin-left: 10px;
       }
       .sidebar {
         width: 250px;
@@ -164,28 +161,29 @@
   <div class="sidebar" id="sidebar">
     <a href="/" class="home-link">🏠 回到主页</a>
     
-      <a href="./性压抑篇.html" class="tag-link">性压抑篇</a>
+      <a href="./性压抑篇.html" class="tag-link ">
+        性压抑篇
+      </a>
     
-      <a href="./杂篇.html" class="tag-link">杂篇</a>
+      <a href="./杂篇.html" class="tag-link active">
+        杂篇
+      </a>
     
   </div>
 
   <!-- 主内容 -->
   <div class="container">
-    <h1 class="page-title">峰语 汇总</h1>
-    <div class="tag-list">
-      
-        <div class="tag-item">
-          <a href="./性压抑篇.html" class="tag-link">性压抑篇</a>
-          <div class="tag-count">共 2 条言论</div>
-        </div>
-      
-        <div class="tag-item">
-          <a href="./杂篇.html" class="tag-link">杂篇</a>
-          <div class="tag-count">共 1 条言论</div>
-        </div>
-      
-    </div>
+    <h1 class="page-title">杂篇</h1>
+    
+      <div class="speech">
+        &lt;p&gt;测试二&lt;/p&gt;
+        
+          
+            <div class="comment">&lt;p&gt;666&lt;/p&gt;</div>
+          
+        
+      </div>
+    
     <div class="update-time">最后更新：2026/3/16 09:56:47</div>
   </div>
 
@@ -196,12 +194,13 @@
     
     menuBtn.addEventListener('click', () => {
       sidebar.classList.toggle('open');
-      // 移动端适配
+      // 移动端适配：打开侧边栏时给body加左内边距
       if (window.innerWidth <= 768) {
         document.body.style.paddingLeft = sidebar.classList.contains('open') ? '250px' : '0';
       }
     });
 
+    // 窗口大小变化时重置样式
     window.addEventListener('resize', () => {
       if (window.innerWidth > 768) {
         document.body.style.paddingLeft = '0';
