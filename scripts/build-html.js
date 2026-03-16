@@ -44,16 +44,24 @@ function numberToChinese(num) {
   return chnStr || "零";
 }
 
-// 工具函数：处理换行规则（纯文本处理，解决<br>显示问题）
+// 工具函数：处理换行规则
 function formatContent(content) {
   if (!content) return "无内容";
-  // 步骤1：将\r\n统一为\n
-  let formatted = content.replace(/\r\n/g, "\n");
-  // 步骤2：将换行符转换为HTML的<br>标签（在模板中正常渲染）
-  // 这里生成<br>，然后让EJS使用默认转义，确保内容正确显示
-  formatted = formatted.replace(/\n\n+/g, "<br><br>");
-  formatted = formatted.replace(/\n/g, "<br>");
-  return formatted;
+
+  // 先统一换行
+  let txt = content.replace(/\r\n/g, "\n");
+
+  // 把用户文本里的 < 和 > 转义成实体，防止被当成 HTML
+  txt = txt
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // 再把换行变成真正的 <br>，用于渲染
+  txt = txt.replace(/\n\n+/g, "<br><br>");
+  txt = txt.replace(/\n/g, "<br>");
+
+  return txt;
 }
 
 // 工具函数：获取所有标签（分篇）
