@@ -11,11 +11,37 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
       color: #333; 
       background-color: #f9f9f9;
-      padding-left: 0;
-      transition: padding-left 0.3s ease;
+      padding: 0;
+      min-height: 100vh;
     }
 
-    /* 侧边目录样式 */
+    /* 菜单按钮（仅移动端显示） */
+    .menu-btn {
+      position: fixed;
+      top: 15px;
+      right: 15px; /* 改到右侧避免遮挡内容 */
+      width: 40px;
+      height: 40px;
+      background-color: #fff;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      display: none; /* 桌面端隐藏 */
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      z-index: 1001;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .menu-btn span {
+      width: 20px;
+      height: 2px;
+      background-color: #333;
+      margin: 2px 0;
+      transition: all 0.2s;
+    }
+
+    /* 侧边目录（仅移动端显示） */
     .sidebar {
       position: fixed;
       top: 0;
@@ -24,10 +50,11 @@
       height: 100vh;
       background-color: #fff;
       border-right: 1px solid #eee;
-      padding: 20px;
+      padding: 60px 20px 20px; /* 顶部留空避免被菜单按钮遮挡 */
       overflow-y: auto;
       transition: left 0.3s ease;
       z-index: 1000;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1); /* 增加阴影层级 */
     }
     .sidebar.open { left: 0; }
     .sidebar .home-link {
@@ -56,37 +83,24 @@
       padding-left: 8px;
     }
 
-    /* 菜单按钮 */
-    .menu-btn {
+    /* 遮罩层（移动端目录展开时显示） */
+    .overlay {
       position: fixed;
-      top: 15px;
-      left: 15px;
-      width: 40px;
-      height: 40px;
-      background-color: #fff;
-      border: 1px solid #eee;
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      z-index: 1001;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0,0,0,0.3);
+      z-index: 999;
+      display: none;
     }
-    .menu-btn span {
-      width: 20px;
-      height: 2px;
-      background-color: #333;
-      margin: 2px 0;
-      transition: all 0.2s;
-    }
+    .overlay.show { display: block; }
 
     /* 内容容器 */
     .container {
       max-width: 800px;
       margin: 0 auto;
-      padding: 80px 20px 40px;
+      padding: 40px 20px;
     }
     .page-title {
       font-size: 28px;
@@ -96,34 +110,26 @@
       padding-bottom: 10px;
     }
 
-    /* 言论样式（纯黑） */
+    /* 言论样式（纯黑）- 与评论仅颜色差异 */
     .speech {
-      background-color: #fff;
       padding: 20px;
       border-radius: 8px;
       margin-bottom: 25px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
       color: #000; /* 纯黑 */
       line-height: 1.8;
+      background-color: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
-    /* 评论样式（浅黑 #4F4F4F） */
+    /* 评论样式（浅黑 #4F4F4F）- 仅颜色差异，无缩进/背景差异 */
     .comment {
-      background-color: #f5f5f5;
-      padding: 15px;
+      padding: 20px;
       border-radius: 8px;
-      margin: 15px 0 0 15px;
+      margin: 15px 0 0 0; /* 取消缩进 */
       color: #4F4F4F; /* 浅黑 */
       line-height: 1.8;
-      border-left: 3px solid #ddd;
-    }
-
-    /* 更新时间 */
-    .update-time {
-      margin-top: 40px;
-      color: #999;
-      font-size: 14px;
-      text-align: center;
+      background-color: #fff; /* 统一背景色 */
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* 统一阴影 */
     }
 
     /* 移动端适配 */
@@ -134,13 +140,12 @@
       .page-title {
         font-size: 24px;
       }
-      .speech {
+      .speech, .comment {
         padding: 15px;
         margin-bottom: 20px;
       }
-      .comment {
-        padding: 12px;
-        margin-left: 10px;
+      .menu-btn {
+        display: flex;
       }
       .sidebar {
         width: 250px;
@@ -150,14 +155,14 @@
   </style>
 </head>
 <body>
-  <!-- 菜单按钮 -->
+  <!-- 移动端菜单按钮 -->
   <div class="menu-btn" id="menuBtn">
     <span></span>
     <span></span>
     <span></span>
   </div>
 
-  <!-- 侧边目录 -->
+  <!-- 移动端侧边目录 -->
   <div class="sidebar" id="sidebar">
     <a href="/" class="home-link">🏠 回到主页</a>
     <% tags.forEach(item => { %>
@@ -166,6 +171,9 @@
       </a>
     <% }) %>
   </div>
+
+  <!-- 移动端遮罩层 -->
+  <div class="overlay" id="overlay"></div>
 
   <!-- 主内容 -->
   <div class="container">
@@ -180,29 +188,41 @@
         <% } %>
       </div>
     <% }) %>
-    <div class="update-time">最后更新：<%= updateTime %></div>
   </div>
 
   <script>
-    // 侧边目录切换
+    // 移动端目录交互
     const menuBtn = document.getElementById('menuBtn');
     const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
     
-    menuBtn.addEventListener('click', () => {
+    // 打开/关闭目录
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       sidebar.classList.toggle('open');
-      // 移动端适配：打开侧边栏时给body加左内边距
-      if (window.innerWidth <= 768) {
-        document.body.style.paddingLeft = sidebar.classList.contains('open') ? '250px' : '0';
+      overlay.classList.toggle('show');
+      document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : 'auto';
+    });
+
+    // 点击遮罩层关闭目录
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.style.overflow = 'auto';
+    });
+
+    // 点击页面空白处关闭目录
+    document.addEventListener('click', (e) => {
+      if (!sidebar.contains(e.target) && e.target !== menuBtn) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+        document.body.style.overflow = 'auto';
       }
     });
 
-    // 窗口大小变化时重置样式
-    window.addEventListener('resize', () => {
-      if (window.innerWidth > 768) {
-        document.body.style.paddingLeft = '0';
-      } else if (sidebar.classList.contains('open')) {
-        document.body.style.paddingLeft = '250px';
-      }
+    // 阻止目录内点击事件冒泡
+    sidebar.addEventListener('click', (e) => {
+      e.stopPropagation();
     });
   </script>
 </body>
