@@ -57,72 +57,6 @@
       padding: 20px;
     }
 
-    /* 菜单按钮（仅移动端显示） */
-    .menu-btn {
-      position: fixed;
-      top: 15px;
-      right: 15px; /* 改到右侧避免遮挡图片 */
-      width: 40px;
-      height: 40px;
-      background-color: #fff;
-      border: 1px solid #eee;
-      border-radius: 8px;
-      display: none; /* 桌面端隐藏 */
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      z-index: 1001;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .menu-btn span {
-      width: 20px;
-      height: 2px;
-      background-color: #333;
-      margin: 2px 0;
-    }
-
-    /* 侧边目录（仅移动端显示） */
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: -280px;
-      width: 280px;
-      height: 100vh;
-      background-color: #fff;
-      border-right: 1px solid #eee;
-      padding: 60px 20px 20px; /* 顶部留空避免被菜单按钮遮挡 */
-      overflow-y: auto;
-      transition: left 0.3s ease;
-      z-index: 1000;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.1); /* 增加阴影层级 */
-    }
-    .sidebar.open { left: 0; }
-    .sidebar .home-link {
-      display: block;
-      font-size: 18px;
-      font-weight: bold;
-      color: #000;
-      text-decoration: none;
-      padding: 10px 0;
-      border-bottom: 1px solid #eee;
-      margin-bottom: 15px;
-    }
-    .sidebar .tag-link {
-      display: block;
-      font-size: 16px;
-      color: #4F4F4F;
-      text-decoration: none;
-      padding: 8px 0;
-      border-radius: 4px;
-      transition: background-color 0.2s;
-    }
-    .sidebar .tag-link:hover {
-      background-color: #f0f0f0;
-      color: #000;
-      padding-left: 8px;
-    }
-
     /* 通用标题样式 */
     .page-title {
       font-size: 32px;
@@ -131,23 +65,25 @@
       text-align: center;
     }
 
-    /* 分篇列表 */
+    /* 分篇列表 - 改为列表式布局 */
     .tag-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
       margin-top: 20px;
     }
     .tag-item {
       background-color: #f9f9f9;
-      padding: 20px;
+      padding: 15px 20px;
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       transition: transform 0.2s, box-shadow 0.2s;
     }
     .tag-item:hover {
-      transform: translateY(-5px);
+      transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
     .tag-link {
@@ -159,7 +95,6 @@
     .tag-count {
       font-size: 14px;
       color: #999;
-      margin-top: 8px;
     }
 
     /* README链接样式 */
@@ -176,19 +111,6 @@
       text-decoration: underline;
     }
 
-    /* 遮罩层（移动端目录展开时显示） */
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: rgba(0,0,0,0.3);
-      z-index: 999;
-      display: none;
-    }
-    .overlay.show { display: block; }
-
     /* 移动端适配 */
     @media (max-width: 768px) {
       body {
@@ -201,44 +123,16 @@
       .mobile-layout {
         display: block;
       }
-      .menu-btn {
-        display: flex;
-      }
       .page-title {
         font-size: 26px;
       }
-      .tag-list {
-        grid-template-columns: 1fr;
-      }
       .tag-item {
-        padding: 15px;
-      }
-      .sidebar {
-        width: 250px;
-        left: -250px;
+        padding: 12px 15px;
       }
     }
   </style>
 </head>
 <body>
-  <!-- 移动端菜单按钮 -->
-  <div class="menu-btn" id="menuBtn">
-    <span></span>
-    <span></span>
-    <span></span>
-  </div>
-
-  <!-- 移动端侧边目录 -->
-  <div class="sidebar" id="sidebar">
-    <a href="/" class="home-link">🏠 回到主页</a>
-    <% tags.forEach(item => { %>
-      <a href="./<%= item %>.html" class="tag-link"><%= item %></a>
-    <% }) %>
-  </div>
-
-  <!-- 移动端遮罩层 -->
-  <div class="overlay" id="overlay"></div>
-
   <!-- 桌面端布局 -->
   <div class="desktop-layout">
     <div class="desktop-left">
@@ -277,42 +171,5 @@
       </div>
     </div>
   </div>
-
-  <script>
-    // 移动端目录交互
-    const menuBtn = document.getElementById('menuBtn');
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('overlay');
-    
-    // 打开/关闭目录
-    menuBtn.addEventListener('click', (e) => {
-      e.stopPropagation(); // 阻止事件冒泡
-      sidebar.classList.toggle('open');
-      overlay.classList.toggle('show');
-      // 移动端不挤压页面
-      document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : 'auto';
-    });
-
-    // 点击遮罩层/页面空白处关闭目录
-    overlay.addEventListener('click', () => {
-      sidebar.classList.remove('open');
-      overlay.classList.remove('show');
-      document.body.style.overflow = 'auto';
-    });
-
-    // 点击页面其他区域关闭目录
-    document.addEventListener('click', (e) => {
-      if (!sidebar.contains(e.target) && e.target !== menuBtn) {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('show');
-        document.body.style.overflow = 'auto';
-      }
-    });
-
-    // 阻止目录内点击事件冒泡
-    sidebar.addEventListener('click', (e) => {
-      e.stopPropagation();
-    });
-  </script>
 </body>
 </html>
